@@ -6,10 +6,9 @@ from discord.ext import commands
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
 PREFIX = os.getenv('PREFIX')
 
-bot = commands.Bot(command_prefix='?')
+bot = commands.Bot(command_prefix=PREFIX)
 
 
 @bot.event
