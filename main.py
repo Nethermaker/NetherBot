@@ -1,17 +1,26 @@
 # bot.py
 import os
-
-import discord
 from dotenv import load_dotenv
+
+from discord.ext import commands
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD = os.getenv('DISCORD_GUILD')
+PREFIX = os.getenv('PREFIX')
 
-client = discord.Client()
+bot = commands.Bot(command_prefix='?')
 
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'{client.user} has connected to Discord!')
+    print(f'{bot.user.name} has successfully connected to Discord.')
+    print(f'\tCurrently connected to {len(bot.guilds)} servers.')
 
-client.run(TOKEN)
+
+@bot.command(name='hi', help='Greets the user')
+async def hi(ctx):
+    response = f'How\'s it going, <@{ctx.author.id}>?'
+    await ctx.send(response)
+
+bot.run(TOKEN)
