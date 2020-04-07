@@ -1,6 +1,7 @@
 # bot.py
 import os
 from dotenv import load_dotenv
+import destiny
 
 from discord.ext import commands
 
@@ -21,5 +22,11 @@ async def on_ready():
 async def hi(ctx):
     response = f'How\'s it going, <@{ctx.author.id}>?'
     await ctx.send(response)
+
+
+@bot.command(name='search', help='Search the Destiny 2 API for a user')
+async def search(ctx, player: str):
+    result = destiny.search_player(player)
+    await ctx.send(result)
 
 bot.run(TOKEN)
