@@ -29,4 +29,10 @@ async def search(ctx, player: str):
     result = destiny.search_player(player)
     await ctx.send(result)
 
+
+@bot.command(name='light', help='Find the max light level of a player')
+async def light(ctx, player: str):
+    result = destiny.max_light_level(player)
+    await ctx.send(result)
+
 bot.run(TOKEN)
