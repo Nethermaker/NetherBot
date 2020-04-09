@@ -43,6 +43,7 @@ async def register(ctx, profile_id: int):
     session = netherbot_db.create_session()
     new_user = User(discord_id=ctx.author.id, bng_profile_id=str(profile_id))
     session.add(new_user)
+    session.commit()
     await ctx.send('User successfully registered')
 
 
@@ -50,7 +51,8 @@ async def register(ctx, profile_id: int):
 async def list_users(ctx):
     netherbot_db = NetherbotDatabase()
     session = netherbot_db.create_session()
-    result = session.query(User).all()
+    user = session.query(User).filter(User.discord_id == ctx.author.id).one()
+    result = user.bng_profile_id
     await ctx.send(result)
 
 
