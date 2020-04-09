@@ -2,6 +2,7 @@
 import os
 from dotenv import load_dotenv
 import destiny
+from netherbot_db import NetherbotDatabase, User
 
 from discord.ext import commands
 
@@ -34,5 +35,23 @@ async def search(ctx, player: str):
 async def light(ctx, player: str):
     result = destiny.max_light_level(player)
     await ctx.send(result)
+
+
+@bot.command(name='register', help='Associate your discord user with a bungie.net profile')
+async def register(ctx, profile_id: int):
+    netherbot_db = NetherbotDatabase()
+    session = netherbot_db.create_session()
+    new_user = User(discord_id=ctx.author.id, bng_profile_id=str(profile_id))
+    session.add(new_user)
+    await ctx.send('User successfully registered')
+
+
+@bot.command(name='list', help='Lists all registered users')
+async def list_users(ctx):
+    netherbot_db = NetherbotDatabase()
+    session = netherbot_db.create_session()
+    result = session.query(User).all()
+    await ctx.send(result)
+
 
 bot.run(TOKEN)
