@@ -60,7 +60,7 @@ async def list_users(ctx):
 
 @bot.command(name='update')
 async def update(ctx):
-    if int(ctx.author.id) == OWNER_ID:
+    if int(ctx.author.id) == int(OWNER_ID):
         await ctx.send('Beginning update...')
         os.system(f'python3 update.py {PID}')
     else:
