@@ -1,14 +1,10 @@
 # bot.py
 import os
-import sys
 from dotenv import load_dotenv
 import destiny
 from netherbot_db import NetherbotDatabase, User
 
 from discord.ext import commands
-
-args = [arg for arg in sys.argv[1:] if not arg.startswith('-')]
-channel_id = args[0]
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -72,4 +68,3 @@ async def update(ctx):
 
 
 bot.run(TOKEN)
-bot.get_channel(int(channel_id)).send('Update successful')
