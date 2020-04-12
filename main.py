@@ -9,6 +9,8 @@ from discord.ext import commands
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 PREFIX = os.getenv('PREFIX')
+OWNER_ID = os.getenv('OWNER_ID')
+PID = os.getpid()
 
 bot = commands.Bot(command_prefix=PREFIX)
 
@@ -54,6 +56,15 @@ async def list_users(ctx):
     user = session.query(User).filter(User.discord_id == ctx.author.id).one()
     result = user.bng_profile_id
     await ctx.send(result)
+
+
+@bot.command(name='update')
+async def update(ctx):
+    if ctx.author.id == OWNER_ID:
+        await ctx.send('Beginning update...')
+        os.system(f'python3 update.py {PID}')
+    else:
+        await ctx.send('Invalid permissions')
 
 
 bot.run(TOKEN)
