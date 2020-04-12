@@ -1,10 +1,14 @@
 # bot.py
 import os
+import sys
 from dotenv import load_dotenv
 import destiny
 from netherbot_db import NetherbotDatabase, User
 
 from discord.ext import commands
+
+args = [arg for arg in sys.argv[1:] if not arg.startswith('-')]
+channel_id = args[0]
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -62,9 +66,10 @@ async def list_users(ctx):
 async def update(ctx):
     if int(ctx.author.id) == int(OWNER_ID):
         await ctx.send('Beginning update...')
-        os.system(f'python3 update.py {PID}')
+        os.system(f'python3 update.py {PID} {ctx.channel.id}')
     else:
         await ctx.send('Invalid permissions')
 
 
 bot.run(TOKEN)
+bot.get_channel(int(channel_id)).send('Update successful')

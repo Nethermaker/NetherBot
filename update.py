@@ -6,7 +6,8 @@ import time
 
 args = [arg for arg in sys.argv[1:] if not arg.startswith('-')]
 pid = args[0]
+channel_id = args[1]
 os.system(f'kill {pid}')
 os.system(f'git pull')
 time.sleep(10)
-os.system(f'python3 main.py')
+os.system(f'python3 main.py {channel_id}')
