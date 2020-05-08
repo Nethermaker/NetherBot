@@ -5,6 +5,7 @@ import destiny
 from netherbot_db import NetherbotDatabase, User
 
 from discord.ext import commands
+from discord import Member
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -40,13 +41,16 @@ async def light(ctx, player: str):
 
 
 @bot.command(name='register', help='Associate your discord user with a bungie.net profile')
-async def register(ctx, profile_id: int):
+async def register(ctx, member: Member):
     netherbot_db = NetherbotDatabase()
     session = netherbot_db.create_session()
-    new_user = User(discord_id=ctx.author.id, bng_profile_id=str(profile_id))
-    session.add(new_user)
-    session.commit()
-    await ctx.send('User successfully registered')
+    user = session.query(User).filter(User.discord_id == ctx.author.id)
+    if user.count() > 0:
+        await ctx.send('User already registered.')
+    else:
+        await ctx.send('Beginning registration. Check your private messages for further info.')
+        channel = await member.create_dm()
+        await channel.send('Further registration info goes here')
 
 
 @bot.command(name='list', help='Lists all registered users')
