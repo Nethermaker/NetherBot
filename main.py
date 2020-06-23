@@ -5,7 +5,7 @@ import destiny
 from netherbot_db import NetherbotDatabase, User
 
 from discord.ext import commands
-from discord import Member
+from discord import Member, DMChannel
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -20,6 +20,19 @@ bot = commands.Bot(command_prefix=PREFIX)
 async def on_ready():
     print(f'{bot.user.name} has successfully connected to Discord.')
     print(f'\tCurrently connected to {len(bot.guilds)} servers.')
+
+
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+
+    if isinstance(message.channel, DMChannel):
+        if True:  # If user is in registration process
+            response = 'Thanks for registering! This doesn\'t actually work yet idiot, but at least you tried.'
+            await message.channel.send(response)
+
+    await bot.process_commands(message)
 
 
 @bot.command(name='hi', help='Greets the user')
@@ -41,7 +54,7 @@ async def light(ctx, player: str):
 
 
 @bot.command(name='register', help='Associate your discord user with a bungie.net profile')
-async def register(ctx, member: Member):
+async def register(ctx):
     netherbot_db = NetherbotDatabase()
     session = netherbot_db.create_session()
     user = session.query(User).filter(User.discord_id == ctx.author.id)
@@ -49,8 +62,9 @@ async def register(ctx, member: Member):
         await ctx.send('User already registered.')
     else:
         await ctx.send('Beginning registration. Check your private messages for further info.')
-        channel = await member.create_dm()
-        await channel.send('Further registration info goes here')
+        channel = await ctx.author.create_dm()
+        await channel.send('Please follow this link and sign into your Bungie profile in order to link your discord and Bungie profiles:\n'
+                           'https://www.bungie.net/en/oauth/authorize?client_id=32452&response_type=code&state=' + str(ctx.author.id))
 
 
 @bot.command(name='list', help='Lists all registered users')

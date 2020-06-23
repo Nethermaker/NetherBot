@@ -32,6 +32,10 @@ def max_light_level(player):
     return max(levels)
 
 
+def oauth_get_player_account(code):
+    pass
+
+
 if __name__ == '__main__':
     # print(search_player('Nethermaker'))
     # api_url = f'{API_BASE}Destiny2/3/Profile/4611686018467392692/Character/2305843009300120719/?components=200'
@@ -39,5 +43,6 @@ if __name__ == '__main__':
     # d = json.loads(response.content)
     # print(d['Response']['character']['data']['light'])
     # print(json.dumps(response.json(), sort_keys=True, indent=4))
-    max_light_level('Nethermaker')
+    url = 'https://bungie.net/en/oauth/authorize?client_id=32452&response_type=code'
+    # ed192630efcdab5fc3df9d8d8b0a979c
 
