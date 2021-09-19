@@ -7,6 +7,7 @@ from discord.ext import commands
 from discord import DMChannel, Embed
 
 from talkingstick import TalkingStick
+from music import Music
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -44,13 +45,14 @@ async def hi(ctx):
 @bot.command(name='update')
 async def update(ctx):
     if int(ctx.author.id) == int(OWNER_ID):
-        await ctx.send('Beginning update...')
-        os.system(f'python3 update.py {PID} {ctx.channel.id}')
+        # TODO: Implement this (https://stackoverflow.com/questions/1750757/restarting-a-self-updating-python-script)
+        pass
     else:
         await ctx.send('Invalid permissions')
 
 
 if __name__ == "__main__":
     bot.add_cog(TalkingStick(bot, OWNER_ID))
+    bot.add_cog(Music(bot))
 
     bot.run(TOKEN)
