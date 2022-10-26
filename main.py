@@ -21,7 +21,7 @@ intents.message_content = True
 intents.presences = True
 intents.members = True
 
-bot = commands.Bot(command_prefix=PREFIX, intents=intents)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX), intents=intents)
 
 @bot.event
 async def on_ready():
