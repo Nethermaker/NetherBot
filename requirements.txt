@@ -1,5 +1,3 @@
-discord.py
 discord.py[voice]
-youtube_dl
-requests
-dotenv
+yt-dlp
+python-dotenv

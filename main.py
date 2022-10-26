@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 from discord.ext import commands
 from discord import DMChannel, Embed
+from discord import Intents
 
 from talkingstick import TalkingStick
 from music import Music
@@ -15,12 +16,20 @@ PREFIX = os.getenv('PREFIX')
 OWNER_ID = os.getenv('OWNER_ID')
 PID = os.getpid()
 
-bot = commands.Bot(command_prefix=PREFIX)
+intents = Intents.default()
+intents.message_content = True
+intents.presences = True
+intents.members = True
+
+bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has successfully connected to Discord.')
     print(f'\tCurrently connected to {len(bot.guilds)} servers.')
+
+    await bot.add_cog(TalkingStick(bot, OWNER_ID))
+    await bot.add_cog(Music(bot))
 
 
 @bot.event
@@ -29,17 +38,10 @@ async def on_message(message):
         return
 
     if isinstance(message.channel, DMChannel):
-        if True:  # If user is in registration process
-            response = 'Thanks for registering! This doesn\'t actually work yet idiot, but at least you tried.'
-            await message.channel.send(response)
+        # Message was sent as a DM to the bot
+        pass
 
     await bot.process_commands(message)
-
-
-@bot.command(name='hi', help='Greets the user')
-async def hi(ctx):
-    response = f'How\'s it going, <@{ctx.author.id}>?'
-    await ctx.send(response)
 
 
 @bot.command(name='update')
@@ -52,7 +54,4 @@ async def update(ctx):
 
 
 if __name__ == "__main__":
-    bot.add_cog(TalkingStick(bot, OWNER_ID))
-    bot.add_cog(Music(bot))
-
     bot.run(TOKEN)
