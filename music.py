@@ -1,6 +1,6 @@
 import discord
 from discord import Embed, VoiceClient
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from yt_dlp import YoutubeDL, utils
 
@@ -37,6 +37,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     self.title = data.get('title')
     self.url = data.get('url')
+    self.duration_string = data.get('duration_string')
+    self.duration = data.get('duration')
 
   @classmethod
   async def from_url(cls, url, *, loop=None, stream=False):
@@ -51,36 +53,26 @@ class YTDLSource(discord.PCMVolumeTransformer):
     return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 
-class MusicClient():
+class MusicQueue():
   update_rate = 1
 
-  def __init__(self, bot: commands.Bot, vc: VoiceClient):
+  def __init__(self, bot: commands.Bot, vc: VoiceClient, ctx: commands.Context):
     self.bot = bot
     self.vc = vc
-    self.queue: list[str] = list()
-
-    #self.loop = asyncio.get_event_loop()
-    #self.loop.run_until_complete(self._update())
+    self.ctx = ctx
+    self.queue: list[YTDLSource] = list()
   
-  # Update Loop
-  async def _update(self):
-    while True:
-      if not self.vc.is_playing() and len(self.queue) == 0:
-        await self.vc.disconnect()
-        break
-      
-      await asyncio.sleep(1)
-      
-  async def add_to_queue(self, url: str):
-    pass
-
-  async def skip(self):
-    pass
+  async def add_url(self, url: str):
+    player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+    self.queue.append(player)
+  
+  def pop(self):
+    if len(self.queue) == 0:
+      return None
+    
+    return self.queue.pop(0)
   
   async def print_queue(self):
-    pass
-
-  async def _download_video(self, url: str):
     pass
 
 
@@ -89,16 +81,45 @@ class Music(commands.Cog):
   def __init__(self, bot: commands.Bot):
     self.bot = bot
 
-    self.clients: dict[VoiceClient, MusicClient] = {}
+    self.clients: dict[VoiceClient, MusicQueue] = {}
+
+    self.update.start()
+  
+  def cog_unload(self):
+    self.update.cancel()
+  
+  @tasks.loop(seconds=5.0)
+  async def update(self):
+    print("Running update loop")
+    for vc in list(self.clients.keys()):
+      if not vc.is_playing():
+        queue = self.clients[vc]
+        next_song = queue.pop()
+        if next_song is None:
+          await vc.disconnect()
+          self.clients.pop(vc)
+        else:
+          vc.play(next_song, after=lambda e: print(f'Player error: {e}') if e else None)
+          await queue.ctx.send(f'Now playing: {next_song.title} ({next_song.duration_string})')
+    
+    await asyncio.sleep(1)
   
   @commands.command(name="play", help="Play a YouTube video")
   async def play(self, ctx: commands.Context, url: str):
+
+    if ctx.voice_client in self.clients:
+      queue = self.clients[ctx.voice_client]
+      async with ctx.typing():
+        await queue.add_url(url)
+        await ctx.send(f"Added to queue: {queue.queue[0].title} ({queue.queue[0].duration_string})")
+        return
     
     async with ctx.typing():
       player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
       ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
+      self.clients[ctx.voice_client] = MusicQueue(self.bot, ctx.voice_client, ctx)
     
-    await ctx.send(f'Now playing: {player.title}')
+    await ctx.send(f'Now playing: {player.title} ({player.duration_string})')
 
   @commands.command(name="skip", help="Skips the current video")
   async def skip(self, ctx: commands.Context):
@@ -114,12 +135,7 @@ class Music(commands.Cog):
     if ctx.voice_client is None:
       if ctx.author.voice:
         await ctx.author.voice.channel.connect()
-        self.clients[ctx.voice_client] = MusicClient(self.bot, ctx.voice_client)
       else:
         await ctx.send("You must be in a voice channel to use this command!")
         raise commands.CommandError("Author not connected to a voice channel.")
-    
-    elif ctx.voice_client.is_playing():
-      # TODO: Queue it up baby
-      ctx.voice_client.stop()
   
