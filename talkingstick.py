@@ -89,6 +89,8 @@ class TalkingStick(commands.Cog):
   
   @commands.Cog.listener()
   async def on_voice_state_update(self, member, before, after):
+    if member.bot:
+      return
     if before.channel != after.channel:
       await self._handle_channel_switch(member, before, after)
     if after.mute is False:
