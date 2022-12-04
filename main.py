@@ -14,6 +14,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 PREFIX = os.getenv('PREFIX')
 OWNER_ID = os.getenv('OWNER_ID')
+YOUTUBE_API_TOKEN = os.getenv('YOUTUBE_API_TOKEN')
 PID = os.getpid()
 
 intents = Intents.default()
@@ -29,7 +30,7 @@ async def on_ready():
     print(f'\tCurrently connected to {len(bot.guilds)} servers.')
 
     await bot.add_cog(TalkingStick(bot, OWNER_ID))
-    await bot.add_cog(Music(bot))
+    await bot.add_cog(Music(bot, YOUTUBE_API_TOKEN))
 
 
 @bot.event

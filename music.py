@@ -3,6 +3,9 @@ from discord import Embed, VoiceClient
 from discord.ext import commands, tasks
 
 from yt_dlp import YoutubeDL, utils
+import requests
+import json
+import re
 
 import os
 
@@ -58,6 +61,45 @@ class YTDLSource(discord.PCMVolumeTransformer):
     filename = data['url'] if stream else ytdl.prepare_filename(data)
     return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data, filename=filename)
   
+  @classmethod
+  async def from_search(cls, search, youtube_api_key, *, loop=None, stream=False):
+    url = YTDLSource.search_youtube(search, youtube_api_key)
+    return await YTDLSource.from_url(url, loop=loop, stream=stream)
+
+  # This method provided courtesy of ChatGPT
+  @classmethod
+  def search_youtube(cls, query: str, api_token: str):
+    # Construct the URL for the search request
+    search_url = "https://www.googleapis.com/youtube/v3/search"
+    
+    # Set the parameters for the search request
+    search_params = {
+      "part": "id",
+      "q": query,
+      "type": "video",
+      "key": api_token,
+    }
+    
+    # Send the search request
+    search_response = requests.get(search_url, params=search_params)
+    
+    # Parse the search response
+    search_results = json.loads(search_response.text)
+    
+    # Check if there are any search results
+    if len(search_results["items"]) > 0:
+      # If there are search results, get the video ID of the first result
+      video_id = search_results["items"][0]["id"]["videoId"]
+      
+      # Construct the URL for the video
+      video_url = "https://www.youtube.com/watch?v=" + video_id
+      
+      # Return the URL of the video
+      return video_url
+    else:
+      # If there are no search results, return None
+      return None
+  
   def after_play(self, e):
     # Report error if there was one
     print(f'Player error: {e}') if e else None
@@ -71,16 +113,24 @@ class YTDLSource(discord.PCMVolumeTransformer):
 class MusicQueue():
   update_rate = 1
 
-  def __init__(self, bot: commands.Bot, vc: VoiceClient, ctx: commands.Context):
+  def __init__(self, bot: commands.Bot, vc: VoiceClient, ctx: commands.Context, youtube_api_key: str):
     self.bot = bot
     self.vc = vc
     self.ctx = ctx
+    self.youtube_api_key = youtube_api_key
+
     self.queue: list[YTDLSource] = list()
 
     self.currently_playing: YTDLSource = None
   
-  async def add_url(self, url: str):
-    player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=False)
+  async def add_song(self, query: str):
+    # Check if query is a link or a search
+    if re.match(r"^https?:\/\/[^\s]+$", query):
+      # query is a link
+      player = await YTDLSource.from_url(query, loop=self.bot.loop, stream=False)
+    else:
+      # query is not a link, search youtube
+      player = await YTDLSource.from_search(query, self.youtube_api_key, loop=self.bot.loop, stream=False)
     self.queue.append(player)
     return player
   
@@ -111,11 +161,11 @@ class MusicQueue():
     return embed
 
 
-
 class Music(commands.Cog):
 
-  def __init__(self, bot: commands.Bot):
+  def __init__(self, bot: commands.Bot, youtube_api_key: str):
     self.bot = bot
+    self.youtube_api_key = youtube_api_key
 
     self.client_queues: dict[VoiceClient, MusicQueue] = {}
 
@@ -141,11 +191,11 @@ class Music(commands.Cog):
             vc.play(player, after=lambda e: player.after_play(e))
             await queue.ctx.send(f'Now playing: {player.title} ({player.duration_string})')
   
-  @commands.command(name="play", help="Play a YouTube video")
-  async def play(self, ctx: commands.Context, url: str):
+  @commands.command(name="play", help="Play a YouTube video", rest_is_raw=True)
+  async def play(self, ctx: commands.Context, *, query: str):
     async with ctx.typing():
-      queue = self.client_queues.get(ctx.voice_client, MusicQueue(self.bot, ctx.voice_client, ctx))
-      player = await queue.add_url(url)
+      queue = self.client_queues.get(ctx.voice_client, MusicQueue(self.bot, ctx.voice_client, ctx, self.youtube_api_key))
+      player = await queue.add_song(query)
       if queue.currently_playing:
         await ctx.send(f'Added to queue: {player.title} ({player.duration_string})')
       else:
