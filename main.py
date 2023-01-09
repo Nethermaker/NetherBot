@@ -4,7 +4,7 @@ import random
 from dotenv import load_dotenv
 
 from discord.ext import commands
-from discord import DMChannel, Embed
+from discord import DMChannel, Embed, Message
 from discord import Intents
 
 from talkingstick import TalkingStick
@@ -15,6 +15,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 PREFIX = os.getenv('PREFIX')
 OWNER_ID = os.getenv('OWNER_ID')
 YOUTUBE_API_TOKEN = os.getenv('YOUTUBE_API_TOKEN')
+BAN_WORDS = os.getenv('BAN_WORDS').split(',')
 PID = os.getpid()
 
 intents = Intents.default()
@@ -34,7 +35,7 @@ async def on_ready():
 
 
 @bot.event
-async def on_message(message):
+async def on_message(message: Message):
     if message.author == bot.user:
         return
 
@@ -43,6 +44,11 @@ async def on_message(message):
         pass
 
     await bot.process_commands(message)
+
+    for banned_word in BAN_WORDS:
+        if banned_word.lower() in message.content.lower():
+            await message.delete()
+            break
 
 
 @bot.command(name='update')
