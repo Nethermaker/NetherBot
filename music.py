@@ -125,7 +125,7 @@ class MusicQueue():
   
   async def add_song(self, query: str):
     # Check if query is a link or a search
-    if re.match(r"^https?:\/\/[^\s]+$", query):
+    if re.match(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", query):
       # query is a link
       player = await YTDLSource.from_url(query, loop=self.bot.loop, stream=False)
     else:
