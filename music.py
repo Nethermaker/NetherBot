@@ -1,6 +1,6 @@
-import discord
-from discord import Embed, VoiceClient
-from discord.ext import commands, tasks
+import nextcord
+from nextcord import Embed, VoiceClient
+from nextcord.ext import commands, tasks
 
 from yt_dlp import YoutubeDL, utils
 import requests
@@ -35,7 +35,7 @@ ffmpeg_options = {
 ytdl = YoutubeDL(ytdl_format_options)
 
 
-class YTDLSource(discord.PCMVolumeTransformer):
+class YTDLSource(nextcord.PCMVolumeTransformer):
   def __init__(self, source, *, data, filename, volume=0.5):
     super().__init__(source, volume)
 
@@ -59,11 +59,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
       data = data['entries'][0]
 
     filename = data['url'] if stream else ytdl.prepare_filename(data)
-    return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data, filename=filename)
+    return cls(nextcord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data, filename=filename)
   
   @classmethod
   async def from_search(cls, search, youtube_api_key, *, loop=None, stream=False):
     url = YTDLSource.search_youtube(search, youtube_api_key)
+    print(f"URL found: {url}")
     return await YTDLSource.from_url(url, loop=loop, stream=stream)
 
   # This method provided courtesy of ChatGPT
@@ -125,11 +126,14 @@ class MusicQueue():
   
   async def add_song(self, query: str):
     # Check if query is a link or a search
+    print(f"Song requested: {query}")
     if re.match(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", query):
       # query is a link
+      print("Query is a link, downloading using URL")
       player = await YTDLSource.from_url(query, loop=self.bot.loop, stream=False)
     else:
       # query is not a link, search youtube
+      print("Query is not a link. Searching via Youtube API")
       player = await YTDLSource.from_search(query, self.youtube_api_key, loop=self.bot.loop, stream=False)
     self.queue.append(player)
     return player
@@ -142,7 +146,7 @@ class MusicQueue():
     return self.currently_playing
   
   def create_queue_embed(self):
-    embed=discord.Embed(title="Currently Playing", description=f"{self.currently_playing.title} ({self.currently_playing.duration_string})", color=0xb853ee)
+    embed=nextcord.Embed(title="Currently Playing", description=f"{self.currently_playing.title} ({self.currently_playing.duration_string})", color=0xb853ee)
     embed.set_thumbnail(url=f"{self.currently_playing.thumbnail}")
 
     up_next_string = ""

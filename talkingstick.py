@@ -1,7 +1,7 @@
 import random
 
-from discord import Embed
-from discord.ext import commands
+from nextcord import Embed
+from nextcord.ext import commands
 
 class TalkingStickChannel:
     emoji_nums = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔄', '❌']

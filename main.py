@@ -3,9 +3,9 @@ import os
 import random
 from dotenv import load_dotenv
 
-from discord.ext import commands
-from discord import DMChannel, Embed, Message
-from discord import Intents
+from nextcord.ext import commands
+from nextcord import DMChannel, Embed, Message
+from nextcord import Intents
 
 from talkingstick import TalkingStick
 from music import Music
@@ -30,8 +30,8 @@ async def on_ready():
     print(f'{bot.user.name} has successfully connected to Discord.')
     print(f'\tCurrently connected to {len(bot.guilds)} servers.')
 
-    await bot.add_cog(TalkingStick(bot, OWNER_ID))
-    await bot.add_cog(Music(bot, YOUTUBE_API_TOKEN))
+    bot.add_cog(TalkingStick(bot, OWNER_ID))
+    bot.add_cog(Music(bot, YOUTUBE_API_TOKEN))
 
 
 @bot.event
