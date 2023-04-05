@@ -146,7 +146,7 @@ class MusicQueue():
     return self.currently_playing
   
   def create_queue_embed(self):
-    embed=nextcord.Embed(title="Currently Playing", description=f"{self.currently_playing.title} ({self.currently_playing.duration_string})", color=0xb853ee)
+    embed = Embed(title="Currently Playing", description=f"{self.currently_playing.title} ({self.currently_playing.duration_string})", color=0xb853ee)
     embed.set_thumbnail(url=f"{self.currently_playing.thumbnail}")
 
     up_next_string = ""
